@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "vault-worktree",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Marketplace for Vault Worktree Plugin",
   "owner": {
     "name": "pengcheng lu",
@@ -10,8 +10,8 @@
   "plugins": [
     {
       "name": "vault-worktree",
-      "description": "Automate Vault project version and branch switching with git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds.",
-      "version": "1.0.0",
+      "description": "Automate Vault project version and branch switching with git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds. Now with persistent configuration and primary worktree support (v2.0).",
+      "version": "2.0.0",
       "author": {
         "name": "pengcheng lu",
         "email": "pengcheng.lu@autodesk.com"
@@ -22,7 +22,32 @@
       },
       "category": "development",
       "homepage": "https://github.com/pengcheng620/vault-worktree",
-      "tags": ["vault", "git", "worktree", "windows", "automation"]
+      "tags": ["vault", "git", "worktree", "windows", "automation", "configuration", "git-worktree"],
+      "breaking-changes": [
+        "Directory naming: vault-2027 → vault-R2027.1 (auto-migrated)",
+        "Configuration stored in ~/.claude/vault-worktree.config.json",
+        "Primary worktree designation (new feature)"
+      ],
+      "migration-guide": "Run: /vault-worktree:worktree-init\nAutomatic migration from v1.x with zero manual work",
+      "requirements": {
+        "os": "Windows",
+        "powershell": "5.0+",
+        "git": "2.7+"
+      },
+      "changelog": {
+        "2.0.0": [
+          "NEW: Branch-based directory naming (vault-R2027.1 instead of vault-2027)",
+          "NEW: Persistent configuration in ~/.claude/vault-worktree.config.json",
+          "NEW: Primary worktree concept - designate main development version",
+          "NEW: Automatic cleanup of v1.x style directories",
+          "IMPROVED: Configuration-aware all commands",
+          "IMPROVED: Better status display with primary marker",
+          "BREAKING: Old v1.x directory names no longer supported"
+        ],
+        "1.0.0": [
+          "Initial release with basic version switching"
+        ]
+      }
     }
   ]
 }
