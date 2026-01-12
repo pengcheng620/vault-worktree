@@ -5,7 +5,8 @@
 param(
     [string]$Versions = "",
     [string]$Primary = "",
-    [switch]$AutoDetect = $false
+    [switch]$AutoDetect = $false,
+    [switch]$Interactive = $false
 )
 
 # Load libraries
@@ -68,6 +69,204 @@ function Find-VersionBranch {
     }
 
     return $null
+}
+
+function Get-BranchRecommendations {
+    param(
+        [Parameter(Mandatory=$true)]
+        [array]$VersionBranches
+    )
+
+    if ($VersionBranches.Count -eq 0) {
+        return @()
+    }
+
+    # Parse version numbers from branches (e.g., R2027.1 → 2027.1)
+    $parsed = @()
+    foreach ($branch in $VersionBranches) {
+        if ($branch -match "^R(\d+)(.*)$") {
+            $parsed += @{
+                branch = $branch
+                major = [int]$matches[1]
+                minor = $matches[2]
+                fullVersion = $matches[1] + $matches[2]
+            }
+        }
+    }
+
+    # Sort by major version, then by minor
+    $sorted = $parsed | Sort-Object -Property @{Expression={$_.major}; Descending=$true}, @{Expression={$_.minor}; Descending=$true}
+
+    # Identify recommendations
+    $recommendations = @{}
+
+    # Latest version
+    if ($sorted.Count -gt 0) {
+        $recommendations.latest = $sorted[0].branch
+    }
+
+    # Stable version (e.g., ends with .x, suggesting long-term support)
+    $stableMatch = $sorted | Where-Object { $_.minor -eq ".x" } | Select-Object -First 1
+    if ($stableMatch) {
+        $recommendations.stable = $stableMatch.branch
+    }
+
+    # Previous version (for compatibility testing)
+    if ($sorted.Count -gt 1) {
+        $recommendations.previous = $sorted[1].branch
+    }
+
+    return $recommendations
+}
+
+function Show-BranchSelection {
+    param(
+        [Parameter(Mandatory=$true)]
+        [array]$VersionBranches,
+
+        [Parameter(Mandatory=$true)]
+        [hashtable]$Recommendations
+    )
+
+    Write-Host ""
+    Write-Section "Available Version Branches"
+
+    # Display all branches with recommendations
+    $index = 1
+    $branchInfo = @()
+    foreach ($branch in ($VersionBranches | Sort-Object -Descending)) {
+        $recommendedTags = @()
+        if ($Recommendations.latest -eq $branch) { $recommendedTags += "LATEST" }
+        if ($Recommendations.stable -eq $branch) { $recommendedTags += "STABLE" }
+        if ($Recommendations.previous -eq $branch) { $recommendedTags += "PREVIOUS" }
+
+        $tagStr = if ($recommendedTags.Count -gt 0) { " [" + ($recommendedTags -join ", ") + "]" } else { "" }
+        $color = if ($recommendedTags.Count -gt 0) { "Green" } else { "White" }
+
+        Write-Host "   $index. $branch$tagStr" -ForegroundColor $color
+        $branchInfo += $branch
+        $index++
+    }
+
+    # Show recommendation summary
+    Write-Host ""
+    Write-Info "Recommendations:"
+    if ($Recommendations.latest) {
+        Write-Host "   • Latest: $($Recommendations.latest)" -ForegroundColor Green
+    }
+    if ($Recommendations.stable -and $Recommendations.stable -ne $Recommendations.latest) {
+        Write-Host "   • Stable: $($Recommendations.stable)" -ForegroundColor Green
+    }
+    if ($Recommendations.previous -and $Recommendations.previous -ne $Recommendations.latest) {
+        Write-Host "   • Previous: $($Recommendations.previous)" -ForegroundColor Cyan
+    }
+
+    Write-Host ""
+    Write-Host "   ✨ Recommended: Initialize LATEST and STABLE versions" -ForegroundColor Cyan
+    Write-Host "      These cover both cutting-edge and stable development" -ForegroundColor Gray
+
+    return $branchInfo
+}
+
+function Get-InteractiveSelection {
+    param(
+        [Parameter(Mandatory=$true)]
+        [array]$VersionBranches,
+
+        [Parameter(Mandatory=$true)]
+        [hashtable]$Recommendations
+    )
+
+    Write-Host ""
+    Write-Section "Interactive Version Selection"
+
+    # Show branches with indexes
+    $index = 1
+    $branchList = @()
+    foreach ($branch in ($VersionBranches | Sort-Object -Descending)) {
+        $recommendedTags = @()
+        if ($Recommendations.latest -eq $branch) { $recommendedTags += "LATEST" }
+        if ($Recommendations.stable -eq $branch) { $recommendedTags += "STABLE" }
+        if ($Recommendations.previous -eq $branch) { $recommendedTags += "PREVIOUS" }
+
+        $tagStr = if ($recommendedTags.Count -gt 0) { " [" + ($recommendedTags -join ", ") + "]" } else { "" }
+        Write-Host "   $index. $branch$tagStr" -ForegroundColor Green
+        $branchList += $branch
+        $index++
+    }
+
+    Write-Host ""
+    Write-Host "   Enter branch numbers to initialize (e.g., '1 2' for first two)" -ForegroundColor Cyan
+    Write-Host "   Or press Enter for recommended selection: $($Recommendations.latest)" -ForegroundColor Gray
+    if ($Recommendations.stable -and $Recommendations.stable -ne $Recommendations.latest) {
+        Write-Host "   and $($Recommendations.stable)" -ForegroundColor Gray
+    }
+
+    # Get user input
+    $input = Read-Host "   Your choice"
+
+    # Parse input
+    $selectedBranches = @()
+    if ([string]::IsNullOrWhiteSpace($input)) {
+        # Default: recommended branches
+        $selectedBranches += $Recommendations.latest
+        if ($Recommendations.stable -and $Recommendations.stable -ne $Recommendations.latest) {
+            $selectedBranches += $Recommendations.stable
+        }
+        Write-Host "   ✓ Using recommended selection: $($selectedBranches -join ', ')" -ForegroundColor Cyan
+    } else {
+        # Parse numeric input
+        $inputs = $input -split "\s+" | Where-Object { $_ -match "^\d+$" } | ForEach-Object { [int]$_ }
+        foreach ($idx in $inputs) {
+            if ($idx -ge 1 -and $idx -le $branchList.Count) {
+                $selectedBranches += $branchList[$idx - 1]
+            }
+        }
+
+        if ($selectedBranches.Count -eq 0) {
+            Write-Warning-Custom "No valid selections made"
+            return $null
+        }
+        Write-Host "   ✓ Selected: $($selectedBranches -join ', ')" -ForegroundColor Cyan
+    }
+
+    # Ask for primary version
+    Write-Host ""
+    Write-Host "   Which version should be PRIMARY (default for version switching)?" -ForegroundColor Cyan
+    $index = 1
+    foreach ($branch in $selectedBranches) {
+        Write-Host "   $index. $branch" -ForegroundColor Green
+        $index++
+    }
+
+    $primaryInput = Read-Host "   Choose primary version (1-$($selectedBranches.Count)) or press Enter for first"
+    $primaryBranch = $selectedBranches[0]
+
+    if ($primaryInput -match "^\d+$") {
+        $primaryIdx = [int]$primaryInput - 1
+        if ($primaryIdx -ge 0 -and $primaryIdx -lt $selectedBranches.Count) {
+            $primaryBranch = $selectedBranches[$primaryIdx]
+            Write-Host "   ✓ Primary: $primaryBranch" -ForegroundColor Cyan
+        }
+    }
+
+    # Show summary
+    Write-Host ""
+    Write-Section "Setup Summary"
+    Write-Host "   Versions to initialize: $($selectedBranches -join ', ')" -ForegroundColor Cyan
+    Write-Host "   Primary version: $primaryBranch" -ForegroundColor Cyan
+
+    Write-Host ""
+    $confirm = Read-Host "   Proceed with initialization? (yes/no)"
+    if ($confirm -ne "yes" -and $confirm -ne "y") {
+        Write-Host "   Setup cancelled" -ForegroundColor Yellow
+        exit 0
+    }
+
+    return @{
+        branches = $selectedBranches
+        primary = $primaryBranch
+    }
 }
 
 function Clean-OldWorktrees {
@@ -158,7 +357,6 @@ if ($remoteBranches.Count -eq 0) {
 # Filter to version branches (R2025.x, R2026.x, R2027.1, etc.)
 $versionBranches = $remoteBranches | Where-Object { $_ -match "^R\d+" }
 Write-Host "   Auto-detected: $($versionBranches -join ', ')" -ForegroundColor Cyan
-Write-Host "   Available: $($remoteBranches -join ', ')" -ForegroundColor Gray
 
 # Determine target branches
 $targetBranches = @()
@@ -177,10 +375,40 @@ if ($Versions) {
         }
     }
 } elseif ($AutoDetect) {
+    # Explicit auto-detect: initialize all version branches
     $targetBranches = $versionBranches
+    Write-Host "   Auto-detect mode: initializing all $($versionBranches.Count) detected versions" -ForegroundColor Cyan
+} elseif ($Interactive) {
+    # Interactive mode: guided selection
+    $recommendations = Get-BranchRecommendations $versionBranches
+    $interactiveResult = Get-InteractiveSelection -VersionBranches $versionBranches -Recommendations $recommendations
+
+    if ($interactiveResult) {
+        $targetBranches = $interactiveResult.branches
+        $Primary = $interactiveResult.primary
+    } else {
+        exit 1
+    }
 } else {
-    # Default: use all version branches
-    $targetBranches = $versionBranches
+    # Smart recommendation mode (default)
+    $recommendations = Get-BranchRecommendations $versionBranches
+    Show-BranchSelection -VersionBranches $versionBranches -Recommendations $recommendations
+
+    # Default: initialize latest and stable (if different)
+    $targetBranches = @($recommendations.latest)
+    if ($recommendations.stable -and $recommendations.stable -ne $recommendations.latest) {
+        $targetBranches += $recommendations.stable
+    }
+
+    # Also add previous version if available (3+ total versions)
+    if ($versionBranches.Count -ge 3 -and $recommendations.previous -and
+        $targetBranches -notcontains $recommendations.previous) {
+        $targetBranches += $recommendations.previous
+    }
+
+    Write-Host ""
+    Write-Host "   ✨ Auto-selected: $($targetBranches -join ', ')" -ForegroundColor Cyan
+    Write-Host "      (Use --versions to override, --auto-detect to init all, or --interactive for guided setup)" -ForegroundColor Gray
 }
 
 if ($targetBranches.Count -eq 0) {

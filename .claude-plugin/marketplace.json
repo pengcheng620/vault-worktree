@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "vault-worktree",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Marketplace for Vault Worktree Plugin",
   "owner": {
     "name": "pengcheng lu",
@@ -10,8 +10,8 @@
   "plugins": [
     {
       "name": "vault-worktree",
-      "description": "Automate Vault project version and branch switching with git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds. Now with persistent configuration and primary worktree support (v2.0).",
-      "version": "2.0.0",
+      "description": "Automate Vault project version and branch switching with smart detection, interactive setup, and primary worktree management. Reduces manual version changes from 20-40 minutes to <5 seconds (v2.1).",
+      "version": "2.1.0",
       "author": {
         "name": "pengcheng lu",
         "email": "pengcheng.lu@autodesk.com"
@@ -35,6 +35,16 @@
         "git": "2.7+"
       },
       "changelog": {
+        "2.1.0": [
+          "NEW: Automatic branch detection and smart recommendations (A1)",
+          "NEW: Interactive setup mode with guided step-by-step flow (A3)",
+          "NEW: Primary worktree awareness in switch-version command (A2)",
+          "NEW: Optional version parameter - defaults to primary worktree",
+          "NEW: Flexible version matching (R2027.1, 2027.1, 2027 all work)",
+          "NEW: Branch recommendation system (identifies latest, stable, previous)",
+          "IMPROVED: Better user guidance with recommendations and explanations",
+          "IMPROVED: Smarter defaults for common workflows"
+        ],
         "2.0.0": [
           "NEW: Branch-based directory naming (vault-R2027.1 instead of vault-2027)",
           "NEW: Persistent configuration in ~/.claude/vault-worktree.config.json",

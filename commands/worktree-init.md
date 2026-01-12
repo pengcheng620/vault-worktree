@@ -21,17 +21,20 @@ Set up the Git worktree structure for your Vault project with improved directory
 ## Usage
 
 ```bash
-# Initialize all detected version branches (recommended)
+# Smart recommendation mode (default) - analyzes and recommends best versions
 /vault-worktree:worktree-init
+
+# Interactive mode - guided step-by-step setup
+/vault-worktree:worktree-init --interactive
+
+# Initialize all detected version branches
+/vault-worktree:worktree-init --auto-detect
 
 # Initialize specific versions
 /vault-worktree:worktree-init --versions R2027.1,R2027
 
 # Specify a primary version
 /vault-worktree:worktree-init --versions R2027.1,R2027 --primary R2027.1
-
-# Auto-detect from remote
-/vault-worktree:worktree-init --auto-detect
 ```
 
 ## Arguments
@@ -39,14 +42,25 @@ Set up the Git worktree structure for your Vault project with improved directory
 - `--versions`: Comma-separated list of branch names (e.g., "R2027.1,R2027" or "R2027")
   - Accepts full branch names: R2027.1, R2025.x, etc.
   - Accepts version shorthand: 2027 (auto-expands to R2027.x)
-  - Default (no args): Auto-detects all R* branches
+  - When specified: Uses exactly these versions, skips recommendations
+  - When omitted: Uses smart recommendations (see below)
 
 - `--primary`: Designate the primary worktree (e.g., "R2027.1")
   - This version will be marked as [PRIMARY] in config
   - Suggested for your main development branch
   - Default: First version created
 
-- `--auto-detect`: Explicitly trigger auto-detection mode
+- `--interactive`: Interactive step-by-step guided setup
+  - Shows all available version branches
+  - Prompts user to select which versions to initialize
+  - Asks user to choose the primary version
+  - Shows confirmation summary before proceeding
+  - Best for first-time setup or when you're unsure
+
+- `--auto-detect`: Initialize ALL detected version branches
+  - Creates worktrees for every R* branch found
+  - Useful for comprehensive setup or CI/CD environments
+  - Skips smart recommendation filtering
 
 ## What This Command Does
 
@@ -58,6 +72,135 @@ Set up the Git worktree structure for your Vault project with improved directory
 6. **Creates new worktrees** with branch-based names (vault-R2027.1, vault-R2027, etc.)
 7. **Stores metadata** including primary version and naming rules
 8. **Shows configuration status** with all created versions
+
+## Smart Recommendations (v2.0 Feature)
+
+When you run `/vault-worktree:worktree-init` without arguments, the command analyzes available branches and makes intelligent recommendations:
+
+### How It Works
+
+1. **Scans all remote branches** matching R* pattern (e.g., R2025.x, R2026.x, R2027.1)
+2. **Identifies key versions:**
+   - **Latest**: Highest version number (e.g., R2027.1)
+   - **Stable**: Long-term support branch ending in .x (e.g., R2027.x)
+   - **Previous**: Previous version for compatibility testing (e.g., R2026.x)
+3. **Recommends initialization of latest + stable** (if different)
+4. **Shows all available branches** with color coding
+5. **Creates sensible defaults** without manual configuration
+
+### Examples
+
+#### Single Release Stream
+If you have: `R2027.1, R2027.2, R2027.3`
+- Recommends: `R2027.3` (latest)
+
+#### Dual-Stream Versioning
+If you have: `R2026.x (stable), R2027.1, R2027.2 (latest)`
+- Recommends: `R2027.2` (latest) + `R2026.x` (stable)
+- Creates worktrees for both cutting-edge and stable development
+
+#### Multiple Releases
+If you have: `R2025.x, R2026.x, R2027.1` (3+ versions)
+- Recommends: `R2027.1` (latest) + `R2026.x` (stable) + `R2025.x` (previous)
+- Covers multiple generations for compatibility testing
+
+### Sample Output
+
+```
+📍 Discovering available branches...
+   Auto-detected: R2025.x, R2026.x, R2027.1
+
+📦 Available Version Branches
+
+   1. R2027.1 [LATEST]
+   2. R2026.x [STABLE]
+   3. R2025.x [PREVIOUS]
+
+Recommendations:
+   • Latest: R2027.1
+   • Stable: R2026.x
+   • Previous: R2025.x
+
+   ✨ Recommended: Initialize LATEST and STABLE versions
+      These cover both cutting-edge and stable development
+
+   ✨ Auto-selected: R2027.1, R2026.x
+      (Use --versions to override or --auto-detect to initialize all)
+```
+
+### Override Recommendations
+
+- **Custom selection:** `/vault-worktree:worktree-init --versions R2027.1,R2025.x`
+- **All versions:** `/vault-worktree:worktree-init --auto-detect`
+- **Single version:** `/vault-worktree:worktree-init --versions R2027.1`
+
+## Interactive Mode (v2.0 Feature)
+
+For first-time users or when you want guided setup, use `--interactive` mode:
+
+```bash
+/vault-worktree:worktree-init --interactive
+```
+
+### Interactive Flow
+
+**Step 1: Choose Versions**
+```
+📍 Discovering available branches...
+   Auto-detected: R2025.x, R2026.x, R2027.1
+
+📦 Interactive Version Selection
+
+   1. R2027.1 [LATEST]
+   2. R2026.x [STABLE]
+   3. R2025.x [PREVIOUS]
+
+   Enter branch numbers to initialize (e.g., '1 2' for first two)
+   Or press Enter for recommended selection: R2027.1
+   and R2026.x
+
+   Your choice: _
+```
+
+**Step 2: Choose Primary**
+```
+   Which version should be PRIMARY (default for version switching)?
+   1. R2027.1
+   2. R2026.x
+
+   Choose primary version (1-2) or press Enter for first
+
+   Your choice: _
+```
+
+**Step 3: Confirm**
+```
+📋 Setup Summary
+
+   Versions to initialize: R2027.1, R2026.x
+   Primary version: R2027.1
+
+   Proceed with initialization? (yes/no): yes
+
+   ✓ Creating vault-R2027.1...
+   ✓ Creating vault-R2026.x...
+```
+
+### Interactive Mode Benefits
+
+- **Beginner-friendly**: Guided setup with clear prompts
+- **Confirmation step**: Review choices before creating worktrees
+- **No defaults**: Every choice is explicit and visible
+- **Full control**: Select exactly which versions you want
+- **Easy primary selection**: Interactively choose your default version
+
+### When to Use Interactive Mode
+
+- First-time Vault setup
+- Unsure which versions to initialize
+- Want explicit control over every decision
+- Teaching others how to set up
+- Setting up a new team member's environment
 
 ## Directory Structure
 

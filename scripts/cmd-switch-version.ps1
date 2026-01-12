@@ -1,23 +1,65 @@
-# Vault Worktree: Switch Version Command Implementation
-# Maps H: drive to a specific Vault version
-# Usage: /vault-worktree:switch-version 2027 [--sync]
+# Vault Worktree: Switch Version Command Implementation (v2.0)
+# Maps H: drive to a specific Vault version with primary worktree awareness
+# Usage: /vault-worktree:switch-version R2027.1 [--sync] [--set-primary]
 
 param(
-    [Parameter(Position=0, Mandatory=$true)]
+    [Parameter(Position=0, Mandatory=$false)]
     [string]$Version,
 
-    [switch]$Sync
+    [switch]$Sync,
+
+    [switch]$SetPrimary
 )
 
 # Load utilities
 . "$(Split-Path $PSCommandPath)\lib-vault-utils.ps1"
+. "$(Split-Path $PSCommandPath)\lib-vault-config.ps1"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+function Find-VersionByBranchOrName {
+    param(
+        [Parameter(Mandatory=$true)]
+        [pscustomobject]$Config,
+
+        [Parameter(Mandatory=$true)]
+        [string]$VersionOrBranch
+    )
+
+    if (-not $Config) {
+        return $null
+    }
+
+    # Try direct branch match first
+    $version = $Config.versions | Where-Object { $_.branch -eq $VersionOrBranch } | Select-Object -First 1
+    if ($version) {
+        return $version
+    }
+
+    # Try directory name match
+    $version = $Config.versions | Where-Object { $_.directory -eq "vault-$VersionOrBranch" } | Select-Object -First 1
+    if ($version) {
+        return $version
+    }
+
+    # Try short version match (R2027.1 → 2027.1, 2027)
+    $shortVersion = $VersionOrBranch -replace "^R", ""
+    $version = $Config.versions | Where-Object { $_.branch -match "^R$([Regex]::Escape($shortVersion))" } | Select-Object -First 1
+    if ($version) {
+        return $version
+    }
+
+    return $null
+}
 
 # ═══════════════════════════════════════════════════════════════════════════
 # MAIN LOGIC
 # ═══════════════════════════════════════════════════════════════════════════
 
 Write-Host ""
-Write-Header "Switching Vault Version"
+Write-Header "Switch Vault Version (v2.0)"
 
 # Find vault root
 Write-Host "🔍 Detecting Vault root..." -ForegroundColor Cyan
@@ -27,124 +69,176 @@ if (-not $vaultRoot) {
     Write-Host "   Current location: $(Get-Location)" -ForegroundColor White
     Write-Host ""
     Write-Info "Solution:"
-    Write-Host "   1. Navigate to Vault root directory: cd D:\Works\Vault\vault"
-    Write-Host "   2. Run the command again: /vault-worktree:switch-version 2027"
+    Write-Host "   1. Navigate to Vault root: cd D:\Works\Vault\vault"
+    Write-Host "   2. Initialize worktree: /vault-worktree:worktree-init"
     exit 1
 }
 
-# Validate vault root
 if (-not (Test-VaultRoot $vaultRoot)) {
-    Write-Error-Custom "Invalid Vault root (no .git directory found)"
+    Write-Error-Custom "Invalid Vault root (no .git directory)"
     exit 1
 }
 
 Write-Success "Found: $vaultRoot"
 
-# Get available versions
-Write-Host "📍 Discovering available versions..." -ForegroundColor Cyan
-$availableVersions = Get-AvailableVersions $vaultRoot
-
-if ($availableVersions.Count -eq 0) {
-    Write-Error-Custom "No Vault version directories found"
-    Write-Host "   Expected directories: vault-2025, vault-2026, vault-2027, etc." -ForegroundColor White
-    Write-Host ""
-    Write-Info "To initialize versions, run:"
+# Load configuration
+Write-Host "📋 Loading configuration..." -ForegroundColor Cyan
+$config = Get-VaultConfig
+if (-not $config) {
+    Write-Error-Custom "No configuration found"
+    Write-Info "Initialize worktree first:"
     Write-Host "   /vault-worktree:worktree-init" -ForegroundColor Cyan
     exit 1
 }
 
-Write-Host "   Found: $($availableVersions -join ', ')"
+$primaryVersion = Get-PrimaryVersion -Config $config
+Write-Success "Config loaded - Primary version: $($primaryVersion.branch ?? 'not set')"
 
-# Validate requested version
-if ($availableVersions -notcontains $Version) {
-    Write-Error-Custom "Version ""$Version"" not found"
-    Write-Host "   Available versions: $($availableVersions -join ', ')" -ForegroundColor White
-    Write-Host ""
-    Write-Info "Solutions:"
-    Write-Host "   1. Use an available version: /vault-worktree:switch-version $(($availableVersions)[0])" -ForegroundColor Cyan
-    Write-Host "   2. Create missing version: /vault-worktree:worktree-init --versions $Version" -ForegroundColor Cyan
+# Show available versions
+Write-Host ""
+Write-Section "Available Versions"
+
+$allVersions = Get-AllVersions -Config $config
+if ($allVersions.Count -eq 0) {
+    Write-Error-Custom "No versions configured"
+    Write-Info "Initialize worktree:"
+    Write-Host "   /vault-worktree:worktree-init" -ForegroundColor Cyan
     exit 1
 }
 
-# Get current version to check for uncommitted changes
-$currentVersion = Get-CurrentVersion $vaultRoot
-$currentVersionPath = if ($currentVersion) { Join-Path $vaultRoot "vault-$currentVersion" } else { $null }
+foreach ($v in $allVersions) {
+    $marker = if ($v.is_primary) { " [PRIMARY]" } else { "" }
+    Write-Host "   $($v.branch)$marker" -ForegroundColor $(if ($v.is_primary) { "Green" } else { "White" })
+}
 
-if ($currentVersionPath -and (Test-Path $currentVersionPath)) {
+# Determine target version
+$targetVersion = $null
+
+if (-not $Version) {
+    # No version specified: use primary
+    if ($primaryVersion) {
+        Write-Host ""
+        Write-Info "No version specified. Using PRIMARY: $($primaryVersion.branch)"
+        $targetVersion = $primaryVersion
+    } else {
+        Write-Error-Custom "No version specified and no primary version set"
+        Write-Info "Either specify version or set primary:"
+        Write-Host "   /vault-worktree:switch-version $($allVersions[0].branch) --set-primary" -ForegroundColor Cyan
+        exit 1
+    }
+} else {
+    # Version specified: find it
+    $targetVersion = Find-VersionByBranchOrName -Config $config -VersionOrBranch $Version
+    if (-not $targetVersion) {
+        Write-Error-Custom "Version ""$Version"" not found"
+        Write-Info "Available versions:"
+        foreach ($v in $allVersions) {
+            Write-Host "   - $($v.branch)" -ForegroundColor Cyan
+        }
+        exit 1
+    }
+}
+
+# Check for uncommitted changes in current version
+$currentVersion = Get-CurrentVersion $vaultRoot
+$currentVersionInfo = if ($currentVersion) { Get-VersionByBranch $currentVersion -Config $config } else { $null }
+$currentVersionPath = if ($currentVersionInfo) { Join-Path $vaultRoot $currentVersionInfo.directory } else { $null }
+
+if ($currentVersionPath -and (Test-Path $currentVersionPath) -and $currentVersionInfo.branch -ne $targetVersion.branch) {
     $hasChanges = Test-HasUncommittedChanges $currentVersionPath
     if ($hasChanges) {
-        Write-Warning-Custom "Uncommitted changes in vault-$currentVersion"
+        Write-Warning-Custom "Uncommitted changes in $($currentVersionInfo.directory)"
         $changeCount = Get-UncommittedChangeCount $currentVersionPath
-        Write-Host "   Files modified: $changeCount"
+        Write-Host "   Files modified: $changeCount" -ForegroundColor Yellow
         Write-Host ""
         Write-Info "Options:"
-        Write-Host "   1. Commit changes: cd h: && git add . && git commit -m ""...""" -ForegroundColor Cyan
-        Write-Host "   2. Stash changes: cd h: && git stash" -ForegroundColor Cyan
-        Write-Host "   3. Continue anyway (changes will be preserved)" -ForegroundColor Cyan
+        Write-Host "   1. Commit: cd h: && git add . && git commit -m ""...""" -ForegroundColor Cyan
+        Write-Host "   2. Stash:  cd h: && git stash" -ForegroundColor Cyan
+        Write-Host "   3. Continue (changes will be preserved)" -ForegroundColor Cyan
     }
 }
 
-# Map H: drive
-Write-Host "🔧 Mapping H: drive..." -ForegroundColor Cyan
-$versionPath = Join-Path $vaultRoot "vault-$Version"
+# Map H: drive to target version
+Write-Host ""
+Write-Section "Mapping H: Drive"
 
-$mapSuccess = Set-HMapping $versionPath
-if (-not $mapSuccess) {
-    Write-Error-Custom "Failed to map H: drive to vault-$Version"
-    Write-Host "   Ensure you have administrator privileges" -ForegroundColor White
-    Write-Host "   Or check if H: is in use by another process" -ForegroundColor White
+$targetPath = Join-Path $vaultRoot $targetVersion.directory
+
+if (-not (Test-Path $targetPath)) {
+    Write-Error-Custom "Target version directory not found: $($targetVersion.directory)"
+    Write-Info "Reinitialize worktree:"
+    Write-Host "   /vault-worktree:worktree-init --versions $($targetVersion.branch)" -ForegroundColor Cyan
     exit 1
 }
 
-Write-Success "H: => $versionPath"
+Write-Host "Mapping H: to $($targetVersion.directory)..." -ForegroundColor Cyan
+$mapSuccess = Set-HMapping $targetPath
+if (-not $mapSuccess) {
+    Write-Error-Custom "Failed to map H: drive"
+    Write-Info "Possible causes:"
+    Write-Host "   - Missing administrator privileges" -ForegroundColor White
+    Write-Host "   - H: is in use by another application" -ForegroundColor White
+    exit 1
+}
 
-# Get status in new version
-Write-Host "📊 Getting version status..." -ForegroundColor Cyan
-$branch = Get-CurrentBranch $versionPath
-$unpushed = Get-UnpushedCommitCount $versionPath
+Write-Success "H: ⇒ $($targetVersion.directory)"
 
-if ($branch) {
-    Write-Host "   Branch: $branch" -ForegroundColor White
-    if ($unpushed -gt 0) {
-        Write-Host "   Unpushed commits: $unpushed" -ForegroundColor Yellow
+# Set as primary if requested
+if ($SetPrimary) {
+    Write-Host ""
+    Write-Section "Setting as Primary"
+    Write-Host "Setting $($targetVersion.branch) as primary version..." -ForegroundColor Cyan
+
+    if (Set-PrimaryVersion -Branch $targetVersion.branch -Config $config) {
+        Write-Success "Primary version updated: $($targetVersion.branch)"
+        $targetVersion.is_primary = $true
+    } else {
+        Write-Warning-Custom "Failed to set primary version"
     }
 }
 
-$hasUncommitted = Test-HasUncommittedChanges $versionPath
+# Get status in target version
+Write-Host ""
+Write-Section "Version Information"
+
+$branch = Get-CurrentBranch $targetPath
+Write-Host "   Branch: $branch" -ForegroundColor Cyan
+
+$hasUncommitted = Test-HasUncommittedChanges $targetPath
+$changeCount = Get-UncommittedChangeCount $targetPath
+$unpushed = Get-UnpushedCommitCount $targetPath
+
 if ($hasUncommitted) {
-    $changeCount = Get-UncommittedChangeCount $versionPath
-    Write-Warning-Custom "Working directory has $changeCount uncommitted file(s)"
+    Write-Host "   Uncommitted: $changeCount file(s)" -ForegroundColor Yellow
 } else {
-    Write-Host "   Status: working directory clean" -ForegroundColor Green
+    Write-Host "   Uncommitted: none" -ForegroundColor Green
+}
+
+if ($unpushed -gt 0) {
+    Write-Host "   Unpushed commits: $unpushed" -ForegroundColor Yellow
+} else {
+    Write-Host "   Unpushed commits: none" -ForegroundColor Green
+}
+
+# Show primary marker
+if ($targetVersion.is_primary) {
+    Write-Host "   Role: PRIMARY (default version)" -ForegroundColor Green
 }
 
 # Sync if requested
 if ($Sync) {
     Write-Host ""
-    Write-Section "Syncing All Versions"
-    Write-Host "   Running: git fetch origin --prune" -ForegroundColor Cyan
+    Write-Section "Syncing with Remote"
+    Write-Host "Running: git fetch origin --prune" -ForegroundColor Cyan
 
     try {
-        Push-Location $versionPath
+        Push-Location $targetPath
 
-        # Fetch all remotes
         $output = git fetch origin --prune 2>&1
         if ($LASTEXITCODE -eq 0) {
-            Write-Success "All versions synced with remote"
-
-            # Show which branches were updated
-            $versionDirs = Get-ChildItem -Path $vaultRoot -Directory -Filter "vault-*" -ErrorAction SilentlyContinue
-            foreach ($dir in $versionDirs) {
-                $version = $dir.Name -replace "^vault-", ""
-                if ($version -eq $Version) {
-                    Write-Host "   ✓ vault-$version (current)" -ForegroundColor Green
-                } else {
-                    Write-Host "   ✓ vault-$version" -ForegroundColor White
-                }
-            }
+            Write-Success "Sync complete"
         } else {
-            Write-Warning-Custom "Sync had warnings or errors:"
-            Write-Host $output -ForegroundColor Yellow
+            Write-Warning-Custom "Sync completed with warnings"
         }
 
         Pop-Location
@@ -155,12 +249,23 @@ if ($Sync) {
     }
 }
 
-# Final status
+# Final summary
 Write-Host ""
-Write-Success "Switched to vault-$Version"
+Write-Section "✅ Switch Complete"
+
+Write-Host "   Current: $($targetVersion.branch)" -ForegroundColor Green
+Write-Host "   Location: H: ⇒ $($targetVersion.directory)" -ForegroundColor Green
+Write-Host "   Branch: $branch" -ForegroundColor Green
+
 Write-Host ""
-Write-Section "💡 Next Steps"
-Write-Host "   1. Switch branch: /vault-worktree:switch-branch PDM-xxxxx" -ForegroundColor Cyan
-Write-Host "   2. Check status:  /vault-worktree:status" -ForegroundColor Cyan
-Write-Host "   3. Start coding:  cd h:" -ForegroundColor Cyan
+Write-Section "🎯 Next Steps"
+
+Write-Host "   1. Switch branch:  /vault-worktree:switch-branch PDM-xxxxx" -ForegroundColor Cyan
+Write-Host "   2. Check status:   /vault-worktree:status" -ForegroundColor Cyan
+Write-Host "   3. Start coding:   cd h:" -ForegroundColor Cyan
+
+if ($SetPrimary) {
+    Write-Host "   4. Primary set:    $($targetVersion.branch) is now default" -ForegroundColor Green
+}
+
 Write-Host ""

@@ -1,7 +1,7 @@
 {
   "name": "vault-worktree",
-  "version": "2.0.0",
-  "description": "Automate Vault development workflow with fast version switching and branch management using git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds.",
+  "version": "2.1.0",
+  "description": "Automate Vault development workflow with smart version detection, interactive setup, and intelligent primary worktree management using git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds.",
   "author": {
     "name": "pengcheng lu",
     "email": "pengcheng.lu@autodesk.com"
