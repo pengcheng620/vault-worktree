@@ -1,0 +1,15 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/validate-version-match.ps1\"",
+          "timeout": 5,
+          "onFailure": "warn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "vault-worktree",
+  "version": "1.0.0",
+  "description": "Automate Vault development workflow with fast version switching and branch management using git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds.",
+  "author": {
+    "name": "pengcheng lu",
+    "email": "pengcheng.lu@autodesk.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "vault",
+    "worktree",
+    "git",
+    "version-management",
+    "branch-switching",
+    "development-workflow",
+    "windows",
+    "powershell"
+  ],
+  "commands": "./commands",
+  "skills": "./skills",
+  "hooks": "./hooks/hooks.json",
+  "features": {
+    "commands": "Available for v1.x compatibility (v2.x use skills)",
+    "skills": "Primary interface for v2.x - ask Claude to switch versions or branches",
+    "hooks": "PreToolUse validation to prevent cross-version file edits"
+  }
+}

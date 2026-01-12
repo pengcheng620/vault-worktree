@@ -1,0 +1,33 @@
+# Local development
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# PowerShell
+*.ps1~
+*.ps1.bak
+PSScriptAnalyzerSettings.psd1
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules (if used for testing)
+node_modules/
+package-lock.json
+
+# Temporary files
+tmpclaude-*.cwd
+.claude-workspace
+
+# macOS
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/

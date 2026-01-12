@@ -1,0 +1,64 @@
+{
+  "name": "vault-worktree",
+  "displayName": "Vault Worktree",
+  "description": "Automate Vault project version and branch management with git worktrees. Switch versions in seconds instead of minutes.",
+  "version": "1.0.0",
+  "author": "pengcheng lu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/vault-worktree"
+  },
+  "keywords": [
+    "vault",
+    "version-management",
+    "git-worktree",
+    "branch-switching",
+    "development-workflow",
+    "windows",
+    "powershell"
+  ],
+  "categories": [
+    "Developer Tools",
+    "Automation",
+    "Version Control"
+  ],
+  "engines": {
+    "claude-code": ">=2.0.0"
+  },
+  "features": {
+    "commands": {
+      "enabled": false,
+      "description": "Commands work better as Skills in v2.x"
+    },
+    "skills": {
+      "enabled": true,
+      "count": 1,
+      "description": "Single comprehensive skill for vault management"
+    },
+    "hooks": {
+      "enabled": true,
+      "description": "PreToolUse validation for cross-version protection"
+    }
+  },
+  "requirements": {
+    "platform": "windows",
+    "powershell": "5.0+",
+    "git": "2.7+",
+    "permissions": [
+      "shell:execute",
+      "file:read",
+      "file:write"
+    ]
+  },
+  "quickStart": [
+    "Copy plugin to ~/.claude/plugins/vault-worktree/",
+    "Install: /plugin install vault-worktree from GitHub",
+    "Use: Ask Claude to 'switch to vault 2027' or 'change branch PDM-xxxxx'"
+  ],
+  "documentation": {
+    "readme": "README.md",
+    "troubleshooting": "README.md#troubleshooting",
+    "architecture": "README.md#architecture-notes"
+  }
+}
