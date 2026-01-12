@@ -1,5 +1,12 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "vault-worktree",
   "version": "1.0.0",
+  "description": "Marketplace for Vault Worktree Plugin",
+  "owner": {
+    "name": "pengcheng lu",
+    "email": "pengcheng.lu@autodesk.com"
+  },
   "plugins": [
     {
       "name": "vault-worktree",
@@ -9,8 +16,10 @@
         "name": "pengcheng lu",
         "email": "pengcheng.lu@autodesk.com"
       },
-      "repository": "https://github.com/pengcheng620/vault-worktree",
+      "source": ".",
+      "category": "development",
       "license": "MIT",
+      "repository": "https://github.com/pengcheng620/vault-worktree",
       "keywords": [
         "vault",
         "worktree",
@@ -20,16 +29,7 @@
         "development-workflow",
         "windows",
         "powershell"
-      ],
-      "categories": [
-        "Developer Tools",
-        "Automation",
-        "Version Control"
-      ],
-      "enabled": true,
-      "commands": "./commands",
-      "skills": "./skills",
-      "hooks": "./hooks/hooks.json"
+      ]
     }
   ]
 }
