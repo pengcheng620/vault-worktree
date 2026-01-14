@@ -1,7 +1,7 @@
 {
   "name": "vault-worktree",
   "version": "2.1.0",
-  "description": "Automate Vault development workflow with smart version detection, interactive setup, and intelligent primary worktree management using git worktrees. Reduces manual version changes from 20-40 minutes to <5 seconds.",
+  "description": "Automate Vault development workflow with smart version detection, interactive setup, and intelligent primary worktree management using git worktrees.",
   "author": {
     "name": "pengcheng lu",
     "email": "pengcheng.lu@autodesk.com"
@@ -13,31 +13,10 @@
     "git",
     "version-management",
     "branch-switching",
-    "development-workflow",
     "windows",
-    "powershell",
-    "configuration",
-    "git-worktree"
+    "powershell"
   ],
   "commands": "./commands",
   "skills": "./skills",
-  "hooks": "./hooks/hooks.json",
-  "features": {
-    "commands": "Available for v1.x compatibility (v2.x use skills)",
-    "skills": "Primary interface for v2.x - ask Claude to switch versions or branches",
-    "hooks": "PreToolUse validation to prevent cross-version file edits",
-    "configuration": "Persistent config stored in ~/.claude/vault-worktree.config.json (NEW in v2.0)"
-  },
-  "breaking-changes": [
-    "Directory naming changed: vault-2027 → vault-R2027.1 (matches git branch names)",
-    "Configuration now persistent: ~/.claude/vault-worktree.config.json",
-    "Primary worktree concept introduced: designates main development version",
-    "Old v1.x directories (vault-2027 etc.) will be automatically removed during init"
-  ],
-  "migration-guide": "Run /vault-worktree:worktree-init to automatically upgrade from v1.x. Script will:\n1. Detect old vault-2027 style directories\n2. Create new vault-R2027.1 style directories\n3. Store configuration in ~/.claude/vault-worktree.config.json\n4. Mark first version as primary worktree\nNo manual cleanup needed - it's fully automated!",
-  "requirements": {
-    "os": "Windows",
-    "powershell": "5.0+",
-    "git": "2.7+"
-  }
+  "hooks": "./hooks/hooks.json"
 }
