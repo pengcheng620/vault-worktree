@@ -28,16 +28,15 @@
   },
   "features": {
     "commands": {
-      "enabled": false,
-      "description": "Commands work better as Skills in v2.x"
+      "count": 5,
+      "description": "5 vault management commands: switch-version, switch-branch, status, diagnose, worktree-init"
     },
     "skills": {
-      "enabled": true,
       "count": 1,
-      "description": "Single comprehensive skill for vault management"
+      "description": "Comprehensive skill for vault automation workflows"
     },
     "hooks": {
-      "enabled": true,
+      "count": 1,
       "description": "PreToolUse validation for cross-version protection"
     }
   },
