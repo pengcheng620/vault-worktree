@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "vault-worktree",
+  "description": "Vault Worktree Plugin - Automate version and branch management",
+  "owner": {
+    "name": "pengcheng lu",
+    "email": "pengcheng.lu@autodesk.com"
+  },
+  "plugins": [
+    {
+      "name": "vault-worktree",
+      "description": "Automate Vault project version and branch switching with smart detection, interactive setup, and primary worktree management.",
+      "category": "development",
+      "source": {
+        "type": "url",
+        "url": "."
+      },
+      "homepage": "https://github.com/pengcheng620/vault-worktree",
+      "tags": ["vault", "git", "worktree", "windows", "automation"]
+    }
+  ]
+}
