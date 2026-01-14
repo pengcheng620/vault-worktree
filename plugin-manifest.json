@@ -39,25 +39,5 @@
       "count": 1,
       "description": "PreToolUse validation for cross-version protection"
     }
-  },
-  "requirements": {
-    "platform": "windows",
-    "powershell": "5.0+",
-    "git": "2.7+",
-    "permissions": [
-      "shell:execute",
-      "file:read",
-      "file:write"
-    ]
-  },
-  "quickStart": [
-    "Copy plugin to ~/.claude/plugins/vault-worktree/",
-    "Install: /plugin install vault-worktree from GitHub",
-    "Use: Ask Claude to 'switch to vault 2027' or 'change branch PDM-xxxxx'"
-  ],
-  "documentation": {
-    "readme": "README.md",
-    "troubleshooting": "README.md#troubleshooting",
-    "architecture": "README.md#architecture-notes"
   }
 }
