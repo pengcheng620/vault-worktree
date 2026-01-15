@@ -1,5 +1,5 @@
 ---
-name: switch-version
+name: vault-worktree:switch-version
 description: Switch to a Vault version with intelligent defaulting to primary worktree. Configuration-aware with flexible version matching (v2.0)
 argument-hint: [<version>] [--sync] [--set-primary]
 allowed-tools: Bash

@@ -1,5 +1,5 @@
 ---
-name: diagnose
+name: vault-worktree:diagnose
 description: Complete environment and status diagnostics for troubleshooting Vault setup
 argument-hint: [--verbose]
 allowed-tools: Bash

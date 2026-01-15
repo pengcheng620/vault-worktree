@@ -1,5 +1,5 @@
 ---
-name: status
+name: vault-worktree:status
 description: View Vault worktree structure and Git status with tree view (v2.0)
 argument-hint: [--full] [--sync]
 allowed-tools: Bash
