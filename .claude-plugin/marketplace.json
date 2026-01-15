@@ -12,7 +12,7 @@
       "description": "Automate Vault project version and branch switching with smart detection, interactive setup, and primary worktree management.",
       "version": "2.1.0",
       "category": "development",
-      "source": ".",
+      "source": "./plugins/vault-worktree",
       "homepage": "https://github.com/pengcheng620/vault-worktree",
       "license": "MIT",
       "tags": ["vault", "git", "worktree", "windows", "automation"]
