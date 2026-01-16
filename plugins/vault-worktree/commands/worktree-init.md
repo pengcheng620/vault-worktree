@@ -1,5 +1,4 @@
 ---
-name: vault-worktree:worktree-init
 description: Initialize or recover Vault worktree structure with v2.0 branch-name based directories
 argument-hint: [--versions R2027.1,R2027] [--primary R2027.1]
 allowed-tools: Bash

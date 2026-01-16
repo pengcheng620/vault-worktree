@@ -1,5 +1,4 @@
 ---
-name: vault-worktree:switch-branch
 description: Quickly switch to a different branch within current Vault version
 argument-hint: <branch-name> [--pull]
 allowed-tools: Bash
