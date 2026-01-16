@@ -14,7 +14,7 @@ Automated workflows for managing Vault development across multiple versions usin
 When a user asks to switch to a specific Vault version (2025, 2026, 2027, etc.), run:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-worktree/scripts/cmd-switch-version.ps1 -Version <version>
+powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-switch-version.ps1" -Version <version>
 ```
 
 **Examples:**
@@ -27,7 +27,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-work
 When a user asks to change branches (with ticket numbers like PDM-xxxxx), run:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-worktree/scripts/cmd-switch-branch.ps1 -Branch <branch>
+powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-switch-branch.ps1" -Branch <branch>
 ```
 
 **Examples:**
@@ -40,7 +40,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-work
 When a user asks for current status or wants diagnostics, run:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-worktree/scripts/cmd-status.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-status.ps1"
 ```
 
 **Examples:**
@@ -53,7 +53,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-work
 When troubleshooting or environment issues, run:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-worktree/scripts/cmd-diagnose.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-diagnose.ps1"
 ```
 
 **Examples:**
@@ -66,7 +66,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-work
 When setting up or reinitializing the worktree structure, run:
 
 ```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File ~/.claude/plugins/vault-worktree/scripts/cmd-worktree-init.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-worktree-init.ps1"
 ```
 
 **Examples:**
