@@ -15,8 +15,5 @@
     "branch-switching",
     "windows",
     "powershell"
-  ],
-  "commands": "./commands",
-  "skills": "./skills",
-  "hooks": "./hooks/hooks.json"
+  ]
 }
