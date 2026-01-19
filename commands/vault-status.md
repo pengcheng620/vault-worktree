@@ -1,22 +1,19 @@
 ---
 description: Check current Vault version, branch, and worktree status
+allowed-tools: Bash(powershell:*), Bash(git:*)
 ---
 
-# Check Vault Status
+Display the current Vault development environment status.
 
-Display your current development environment status including version, branch, and uncommitted changes.
+Execute the status script:
 
-## Usage
+!`powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-status.ps1"`
 
-Ask me for status information, for example:
-- "What version am I on?"
-- "Show me the current git status"
-- "Check worktree setup"
-
-## What it shows
-
+The output should include:
 - Current Vault version
 - Current Git branch
 - H: drive mapping status
-- Uncommitted changes count
-- Working directory cleanliness
+- Number of uncommitted changes
+- Working directory cleanliness status
+
+Provide a summary of the current state to the user.

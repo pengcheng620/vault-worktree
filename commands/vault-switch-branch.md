@@ -1,28 +1,16 @@
 ---
 description: Switch Git branch (supports ticket numbers like PDM-xxxxx)
+argument-hint: [branch-name]
+allowed-tools: Bash(powershell:*), Bash(git:*)
 ---
 
-# Switch Git Branch
+Switch the current Vault worktree to branch $1.
 
-Change to a different Git branch within the current Vault version.
+Execute the branch switch script:
 
-## Usage
+!`powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-switch-branch.ps1" -Branch $1`
 
-Ask me to switch branches, for example:
-- "Switch to branch PDM-49688"
-- "Check out feature/auth-improvements"
-- "Change to main branch"
-
-## What happens
-
-1. Verify branch exists in current worktree
-2. Stash any uncommitted changes (optional)
-3. Check out the target branch
-4. Display confirmation with current status
-
-## Support
-
-Supports:
-- Feature branches (feature/*, bugfix/*)
-- Ticket numbers (PDM-*, JIRA-*)
-- Standard branches (main, master, develop)
+After execution:
+- Confirm the branch was successfully checked out
+- Show current Git status (branch name and working directory state)
+- Alert if there are uncommitted changes

@@ -1,36 +1,25 @@
 ---
 description: Initialize or reinitialize the Vault worktree multi-version structure
+allowed-tools: Bash(powershell:*), Bash(git:*)
 ---
 
-# Initialize Vault Worktree
+Set up or reinitialize the complete Vault worktree structure for multi-version development.
 
-Set up or reinitialize the complete worktree structure for multi-version Vault development.
+Execute the initialization script:
 
-## Usage
+!`powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-worktree-init.ps1"`
 
-Ask me to initialize the worktree, for example:
-- "Set up the worktree structure"
-- "Initialize worktree"
-- "Create version directories"
+The initialization will:
+1. Create multi-version directory structure (for Vault 2025, 2026, 2027, etc.)
+2. Initialize git worktrees for each Vault version
+3. Set up H: drive mapping configuration
+4. Validate environment setup
+5. Create necessary configuration files
 
-## What it does
+After execution:
+- Confirm successful worktree structure creation
+- Display initialized versions and locations
+- Show H: drive mapping configuration
+- Provide next steps for first-time setup
 
-1. Creates multi-version directory structure
-2. Initializes git worktrees for each Vault version
-3. Sets up H: drive mapping configuration
-4. Validates environment setup
-5. Creates necessary configuration files
-
-## First-time setup
-
-This command should be run once to establish your Vault development environment. It will:
-- Create directories for Vault versions (2025, 2026, 2027, etc.)
-- Initialize git worktrees for parallel development
-- Set up drive mapping for seamless version switching
-
-## Requirements
-
-- Administrator privileges
-- Git 2.7+
-- PowerShell 5.0+
-- Sufficient disk space for multiple versions
+Note: This should typically be run once during initial setup, but can be re-run to repair a corrupted worktree configuration.

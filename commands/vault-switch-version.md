@@ -1,26 +1,16 @@
 ---
 description: Switch to a specific Vault version (2025, 2026, 2027, etc.)
+argument-hint: [version]
+allowed-tools: Bash(powershell:*)
 ---
 
-# Switch Vault Version
+Switch the Vault development environment to work with version $1.
 
-Switch the development environment to work with a specific Vault version.
+Execute the version switch script:
 
-## Usage
+!`powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-switch-version.ps1" -Version $1`
 
-Ask me to switch to a Vault version, for example:
-- "Switch to Vault 2027"
-- "Change to vault-2026.x version"
-- "I need to work on 2025"
-
-## What happens
-
-1. Verify the target version directory exists
-2. Map the H: drive to the selected version
-3. Update the git worktree configuration
-4. Display confirmation with new version and branch info
-
-## Requirements
-
-- Administrator privileges for H: drive mapping
-- Target version directory must exist in your worktree
+After execution:
+- Confirm the H: drive mapping is set to the correct version directory
+- Display the new Vault version and current branch
+- Alert user to commit/stash changes before switching if needed

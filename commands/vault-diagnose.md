@@ -1,20 +1,15 @@
 ---
 description: Run diagnostics to troubleshoot environment and configuration issues
+allowed-tools: Bash(powershell:*), Bash(git:*)
 ---
 
-# Vault Diagnostics
+Run comprehensive diagnostics on the Vault development environment.
 
-Run comprehensive diagnostics to identify environment issues and validate your setup.
+Execute the diagnostics script:
 
-## Usage
+!`powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-diagnose.ps1"`
 
-Ask me to diagnose problems, for example:
-- "Why isn't the version switch working?"
-- "Check my environment"
-- "Diagnose the setup"
-
-## What it checks
-
+The diagnostics will check:
 - PowerShell version (requires 5.0+)
 - Git installation and version
 - H: drive mapping configuration
@@ -22,10 +17,7 @@ Ask me to diagnose problems, for example:
 - Vault repository status
 - Worktree configuration validity
 
-## Troubleshooting
-
-If you encounter issues:
-1. Run this command to get detailed diagnostics
-2. Check PowerShell version: `$PSVersionTable.PSVersion`
-3. Verify git is installed: `git --version`
-4. Ensure administrator privileges for drive mapping
+Analyze the output and provide:
+- Summary of environment health
+- Any issues or misconfigurations found
+- Recommended actions to resolve issues
