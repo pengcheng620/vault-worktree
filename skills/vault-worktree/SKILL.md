@@ -1,103 +1,100 @@
 ---
 name: vault-worktree
-description: When Claude detects user is working with Vault development workflow, version switching, or worktree management tasks
+description: Teaches Claude about Vault development workflow automation using git worktrees, version management, and branch switching for Windows-based Vault projects
 ---
 
 # Vault Worktree Automation Skill
 
-Automatically activate when user mentions:
-- Switching Vault versions (2025, 2026, 2027, etc.)
-- Changing Git branches with ticket numbers (PDM-xxxxx, feature branches)
-- Checking Vault status or environment
-- Troubleshooting Vault or worktree issues
-- Setting up or initializing Vault worktree structure
+This skill provides Claude with knowledge for automating Vault development workflows:
 
-## Automated Operations
+- **Version Switching**: Map Vault versions (2025, 2026, 2027, etc.) to H: drive with instant switching
+- **Branch Management**: Switch Git branches by ticket number (PDM-xxxxx) or feature branches
+- **Status Monitoring**: Check worktree status, uncommitted changes, and unpushed commits
+- **Troubleshooting**: Diagnose PowerShell, Git, and worktree configuration issues
+- **Initialization**: Set up multi-version git worktree structure with shared .git database
 
-When this skill activates, intelligently route user requests to appropriate PowerShell scripts:
+## How Claude Helps Users
+
+When a user asks to perform Vault operations, Claude matches the request to the appropriate operation:
 
 ### 1. Version Switching
-When user asks to switch to a specific Vault version:
+**User intent**: Switch to a specific Vault version (2025, 2026, 2027, etc.)
 
-```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-switch-version.ps1" -Version <version>
-```
-
-Examples that trigger this:
+**Examples Claude recognizes**:
 - "Switch me to Vault 2027"
 - "Change to vault-2026.x version"
 - "I need to work on the 2025 version"
+- "Map the H: drive to vault-2027"
+
+**Claude's action**: Runs `cmd-switch-version.ps1` with the version number, then verifies the H: drive mapping
+
+---
 
 ### 2. Branch Switching
-When user asks to change Git branches:
+**User intent**: Switch Git branches, typically by ticket number
 
-```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-switch-branch.ps1" -Branch <branch>
-```
-
-Examples that trigger this:
+**Examples Claude recognizes**:
 - "Switch to branch PDM-49688"
 - "Check out feature/auth-improvements"
 - "Change to main branch"
+- "I need to work on PDM-12345"
+
+**Claude's action**: Runs `cmd-switch-branch.ps1` with the branch name, then shows the new branch status
+
+---
 
 ### 3. Status Checking
-When user asks about current status or configuration:
+**User intent**: Get current Vault status, branch, and uncommitted work
 
-```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-status.ps1"
-```
-
-Examples that trigger this:
+**Examples Claude recognizes**:
 - "What version am I on?"
 - "Show me the current git status"
 - "Check my worktree setup"
+- "Do I have any uncommitted changes?"
+
+**Claude's action**: Runs `cmd-status.ps1` and interprets the output for the user
+
+---
 
 ### 4. Troubleshooting
-When user reports issues or asks for diagnostics:
+**User intent**: Diagnose configuration or functionality issues
 
-```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-diagnose.ps1"
-```
-
-Examples that trigger this:
+**Examples Claude recognizes**:
 - "Why isn't the version switch working?"
 - "Check my environment"
 - "Diagnose what's wrong"
+- "PowerShell version check"
+
+**Claude's action**: Runs `cmd-diagnose.ps1` to validate environment and provide solutions
+
+---
 
 ### 5. Initialization
-When user wants to set up the worktree structure:
+**User intent**: Set up the git worktree structure for the first time
 
-```bash
-powershell -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/cmd-worktree-init.ps1"
-```
-
-Examples that trigger this:
+**Examples Claude recognizes**:
 - "Set up the worktree structure"
 - "Initialize worktree"
 - "Create version directories"
+- "First-time setup for vault"
 
-## Environment Requirements
+**Claude's action**: Runs `cmd-worktree-init.ps1` and guides through initial configuration
 
-- Windows with PowerShell 5.0+
-- Git 2.7+
-- Vault project with git repository
-- Administrator privileges for H: drive mapping
+---
 
-## Skill Behavior
+## Prerequisites
 
-1. **Detection**: Monitor for Vault-related keywords and version numbers
-2. **Routing**: Direct requests to appropriate PowerShell script
-3. **Execution**: Run scripts with proper environment variables
-4. **Feedback**: Analyze output and provide user-friendly status updates
-5. **Error Handling**: Guide troubleshooting for failed operations
+- **Operating System**: Windows with PowerShell 5.0+
+- **Version Control**: Git 2.7+
+- **Repository**: Vault project with git repository initialized
+- **Permissions**: Administrator privileges (required for H: drive mapping)
 
-## Integration with Commands
+## Implementation Details
 
-This skill powers the following user-available commands:
-- `/vault-switch-version` - Manual version switching
-- `/vault-switch-branch` - Manual branch switching
-- `/vault-status` - Manual status checking
-- `/vault-diagnose` - Manual diagnostics
-- `/vault-init` - Manual worktree initialization
-
-Users can either invoke commands directly or describe their task naturally, and this skill will automatically activate.
+When Claude recognizes a user request matching this skill:
+1. Identifies the operation type (version switch, branch switch, status, diagnose, init)
+2. Extracts parameters (version number, branch name, etc.)
+3. Executes the appropriate PowerShell script from `${CLAUDE_PLUGIN_ROOT}/scripts/`
+4. Parses the output to extract status and results
+5. Provides user-friendly feedback with actionable next steps
+6. If errors occur, guides the user toward resolution

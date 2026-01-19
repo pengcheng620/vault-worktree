@@ -230,46 +230,57 @@ git stash
 ```
 vault-worktree/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin configuration
+│   ├── plugin.json              # Plugin metadata and configuration
+│   └── marketplace.json         # Marketplace listing metadata
 ├── skills/
-│   └── vault-worktree.md        # Main skill for v2.x compatibility
-├── commands/                    # Legacy commands (v1.x compatibility)
-│   ├── diagnose.md
-│   ├── status.md
-│   ├── switch-branch.md
-│   ├── switch-version.md
-│   └── worktree-init.md
+│   └── vault-worktree/
+│       └── SKILL.md             # Main skill - teaches Claude about vault operations
+├── commands/                    # User-invokable commands for Claude Code
+│   ├── vault-diagnose.md        # Run diagnostics on environment
+│   ├── vault-status.md          # Check worktree and git status
+│   ├── vault-switch-branch.md   # Switch git branches
+│   ├── vault-switch-version.md  # Switch Vault versions
+│   └── vault-init.md            # Initialize worktree structure
 ├── hooks/
-│   ├── hooks.json               # Hook configuration
+│   ├── hooks.json               # Hook event configuration
 │   └── scripts/
-│       └── validate-version-match.ps1
-├── scripts/                     # PowerShell implementation
-│   ├── cmd-diagnose.ps1
-│   ├── cmd-status.ps1
-│   ├── cmd-switch-branch.ps1
-│   ├── cmd-switch-version.ps1
-│   ├── cmd-worktree-init.ps1
-│   └── lib-vault-utils.ps1      # Shared utilities
-├── plugin-manifest.json         # Marketplace metadata
-└── README.md
+│       └── validate-version-match.ps1  # PreToolUse hook validation
+├── scripts/                     # PowerShell implementation layer
+│   ├── cmd-diagnose.ps1         # Implementation: diagnostics
+│   ├── cmd-status.ps1           # Implementation: status checking
+│   ├── cmd-switch-branch.ps1    # Implementation: branch switching
+│   ├── cmd-switch-version.ps1   # Implementation: version switching
+│   ├── cmd-worktree-init.ps1    # Implementation: initialization
+│   ├── lib-vault-utils.ps1      # Shared utilities (detection, git, formatting)
+│   └── lib-vault-config.ps1     # Shared config management
+├── .gitignore                   # Git ignore patterns
+├── LICENSE                      # MIT License
+└── README.md                    # This file
 ```
 
 ## 📚 Technical Details
 
 ### Skills Integration
 
-The plugin includes `skills/vault-worktree.md` which teaches Claude about available operations:
+The `skills/vault-worktree/SKILL.md` file teaches Claude about Vault operations:
 
-```markdown
-# When Claude understands user intent like:
-- "Switch to Vault 2027"
-- "Change branch to PDM-xxxxx"
+**Structure**:
+- **Description**: Clear, third-person explanation of what Claude learns
+- **How Claude Helps Users**: User intent patterns and Claude's actions
+- **Operation Categories**:
+  1. Version Switching - Map versions to H: drive
+  2. Branch Switching - Switch Git branches by ticket number
+  3. Status Checking - Report current environment state
+  4. Troubleshooting - Run diagnostics and provide solutions
+  5. Initialization - Set up multi-version worktree
+- **Implementation Details**: How Claude executes commands and provides feedback
 
-# Claude will:
-1. Recognize the request matches vault-worktree skill
-2. Call the appropriate PowerShell script
-3. Return results to user
-```
+**Example**: When user says "Switch to Vault 2027", Claude:
+1. Recognizes the version switching intent
+2. Extracts parameter: "2027"
+3. Executes the appropriate command
+4. Parses success/failure from output
+5. Provides user-friendly confirmation and next steps
 
 ### Marketplace Configuration
 
@@ -285,6 +296,44 @@ The `.claude-plugin/marketplace.json` enables:
 - Detects when trying to edit files in wrong Vault version
 - Warns user before proceeding
 - Prevents accidental cross-version changes
+
+**Environment Variable**: `${CLAUDE_PLUGIN_ROOT}`
+- Automatically set by Claude Code to the plugin directory path
+- Used to reference scripts: `${CLAUDE_PLUGIN_ROOT}/scripts/validate-version-match.ps1`
+- Ensures portability across different installation paths
+- Works on Windows, macOS, and Linux
+
+### Command Implementation Details
+
+All commands in `commands/` directory:
+- Include `argument-hint` to guide user input
+- Contain Claude Code instructions (FOR Claude, not for users)
+- Execute PowerShell scripts using `${CLAUDE_PLUGIN_ROOT}`
+- Parse output and provide user-friendly feedback
+- Handle errors with actionable troubleshooting steps
+
+Example command structure:
+```markdown
+---
+description: What this command does
+argument-hint: "[parameter]"
+allowed-tools: Bash(powershell:*), Bash(git:*)
+---
+
+Instructions FOR Claude Code:
+1. Execute the script with parameters
+2. Parse the output
+3. Provide user-friendly results
+```
+
+### Skills Integration Details
+
+The `skills/vault-worktree.md` skill teaches Claude:
+- User intent patterns ("Switch to 2027", "Change branch PDM-xxxxx")
+- Operation categories (version switching, branch switching, status, diagnostics, init)
+- How to extract parameters from user requests
+- Which PowerShell script to execute for each operation
+- How to provide helpful feedback and error guidance
 
 ---
 
